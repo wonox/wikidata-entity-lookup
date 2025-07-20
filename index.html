@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wikidata Entity Lookup CDN Example</title>
+ 
+    <!-- 1. CDNからライブラリ(UMDビルド)を読み込む -->
+    <!-- この方法が最もシンプルで確実です <script src="./wikidata-entity-lookup.js"></script> -->
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; }
+        #results { margin-top: 20px; border: 1px solid #ccc; padding: 10px; }
+        .entity { border-bottom: 1px solid #eee; padding: 5px 0; }
+        .entity:last-child { border-bottom: none; }
+        a { text-decoration: none; color: #0066cc; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <h1>Wikidata Entity Lookup Example</h1>
+    <p>検索したいキーワードを入力してください。</p>
+    <input type="text" id="search-input" value="Douglas Adams">
+    <button id="search-button">検索</button>
+
+    <h2>検索結果:</h2>
+    <div id="results">ここに結果が表示されます...</div>
+
+    <script type="module">
+   import WikidataEntityLookup from './wikidata-entity-lookup.js';
+      //const wikidataEntityLookup = new WikidataEntityLookup({  
+        // DOM要素を取得
+        const searchInput = document.getElementById('search-input');
+        const searchButton = document.getElementById('search-button');
+        const resultsDiv = document.getElementById('results');
+
+        // 検索を実行する関数
+        function performSearch() {
+            const query = searchInput.value;
+            if (!query) {
+                resultsDiv.innerHTML = '検索キーワードを入力してください。';
+                return;
+            }
+
+            resultsDiv.innerHTML = '検索中...';
+
+            // 3. グローバルに作成された`wikidataEntityLookup`オブジェクトを使用します
+            // <script type="module"> や import は不要です
+            //wikidataEntityLookup.searchEntities(query)
+            WikidataEntityLookup.findPerson(query)
+                .then(data => {
+                    // 4. 結果を表示
+                    console.log('Search results:', data);
+                    resultsDiv.innerHTML = ''; // 結果をクリア
+                    if (data && data.length > 0) {
+                        data.forEach(entity => {
+                            const entityDiv = document.createElement('div');
+                            entityDiv.className = 'entity';
+                            
+                            const name = entity.name || 'No namel';
+                            const description = entity.description || 'No description';
+                            const url = entity.uri;
+
+                            entityDiv.innerHTML = `
+                                <strong><a href="${url}" target="_blank">${name}</a></strong> (ID: ${entity.id})<br>
+                                <span>${description}</span>
+                            `;
+                            resultsDiv.appendChild(entityDiv);
+                        });
+                    } else {
+                        resultsDiv.innerHTML = '検索結果が見つかりませんでした。';
+                    }
+                })
+                .catch(error => {
+                    // エラーハンドリング
+                    console.error('Search failed:', error);
+                    resultsDiv.innerHTML = '検索中にエラーが発生しました。';
+                });
+        }
+
+        // ボタンがクリックされたら検索を実行
+        searchButton.addEventListener('click', performSearch);
+        
+        // ページ読み込み時に初期値で検索を実行
+        performSearch();
+    </script>
+
+    <p>このコードは、Wikidataのエンティティを検索するためのものです。検索キーワードを入力して、ボタンをクリックすると、関連するエンティティが表示されます。</p>
+
+<p>
+https://zenn.dev/nakamura196/articles/5f1a65ef748c5a
+cwrcのwikidata-entity-lookupを試す
+https://github.com/cwrc/wikidata-entity-lookup
+</p>
+</body>
+</html>
